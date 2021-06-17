@@ -1,16 +1,7 @@
-P = function (p, opts)
-    opts = opts or {}
-    for r, v in pairs(p) do
-        if opts.count == true then print(v.tag .. "\t" .. #v.files)
-        else print(r,v) end
-    end
-end
-
 local M = {}
 
-local pwd = "/Users/danielmathiot/Documents/000\\ Meta/00.01\\ NewBrain/"
-local pwd2 = "/Users/danielmathiot/Documents/000 Meta/00.01 NewBrain/"
-local directory = io.popen("ls -p " .. pwd)
+local patterns = {}
+patterns.tags = "#[%wdéêèâàôù§-]+"
 
 M.get_tags = function ()
     local T = {}
@@ -38,10 +29,10 @@ M.sort_tags = function (tags)
     return sorted
 end
 
-M.populate_tags = function (file, tags)
-    for c in io.lines(pwd2..file) do
+M.populate_tags = function (file, tags, opts)
+    for c in io.lines(opts.directory .. file) do
         if c == nil then break end
-        for t in c.gmatch(c, "#[%wdéêèâàôù§-]+") do --> find iteratively the tags in a file
+        for t in c.gmatch(c, patterns.tags) do --> find iteratively the tags in a file
             if not tags[t] then tags[t] = {} end
             if tags[t] ~= nil then table.insert(tags[t], file) end
         end
@@ -49,7 +40,7 @@ M.populate_tags = function (file, tags)
 end
 
 M.find_md_files = function (opts)
-    local dir = io.popen('ls -p ' .. opts.directory)
+    local dir = io.popen('ls -p ' .. '"' .. opts.directory .. '"')
     local files = {}
     for f in dir:lines() do
         if string.sub(f, -3, -1) == ".md" then
@@ -59,10 +50,10 @@ M.find_md_files = function (opts)
     return files
 end
 
-M.find_tags_in_files = function(files)
+M.find_tags_in_files = function(files, opts)
     local tags = {}
     for _,file in pairs(files) do
-        M.populate_tags(file, tags)
+        M.populate_tags(file, tags, opts)
     end
     return tags
 end
@@ -74,13 +65,10 @@ M.parse_tags = function (opts)
         return
     end
     local files = M.find_md_files(opts)
-    local tags = M.find_tags_in_files(files)
+    local tags = M.find_tags_in_files(files, opts)
     return tags
 end
 
-tags = M.parse_tags({ directory = "/Users/danielmathiot/Documents/000\\ Meta/00.01\\ NewBrain/" })
-sorted = M.sort_tags(tags)
-P(sorted, { count = true })
 return M
 
 
